@@ -1,0 +1,46 @@
+<resources>
+    <string name="app_name">QHVCDemo</string>
+
+    <string name="str_sdk_ver"></string>
+
+    <!--main Activity-->
+    <string name="str_main_activity_subtitle">播放sdk</string>
+    <string name="str_main_activity_btn_live">直播播放器</string>
+    <string name="str_main_activity_btn_vod">点播播放器</string>
+
+    <!-- live vod config -->
+    <string name="str_config_no_play_address">无地址</string>
+    <string name="str_config_business_id">Bid 业务标识</string>
+    <string name="str_config_channel_id">Cid 渠道标识</string>
+    <string name="str_config_sn">sn 直播流标识</string>
+    <string name="str_config_source_list">直播流列表</string>
+    <string name="str_config_source_list_unflod">展开</string>
+    <string name="str_config_source_list_flod">折叠</string>
+    <string name="str_config_decoded_mode">解码方式</string>
+    <string name="str_config_decoded_auto">自动解码</string>
+    <string name="str_config_decoded_soft">软解码</string>
+    <string name="str_config_have_play_address">有地址</string>
+    <string name="str_config_start_play">开始播放</string>
+    <string name="str_config_whether_auto_play">是否自动播放:</string>
+    <string name="str_config_url">URL(播放地址):</string>
+
+    <!-- play video info -->
+    <string name="str_play_info_url">播放url:</string>
+    <string name="str_play_info_resolution">分辨率:</string>
+    <string name="str_play_info_bitrate">码率:</string>
+    <string name="str_play_info_frame_rate">帧率:</string>
+    <string name="str_play_info_audio_format">音频格式:</string>
+    <string name="str_play_info_audio_sampling_rate">音频采样率:</string>
+    <string name="str_play_info_audio_track">音频轨道:</string>
+    <string name="str_play_info_video_farmat">视频编码格式:</string>
+    <string name="str_play_info_download_sum">下行流量:</string>
+    <string name="str_play_info_already_play_time">已播时长:</string>
+    <string name="str_play_info_net_type">网络类型:</string>
+
+    <!-- beauty -->
+    <string name="str_beauty_beauty_authentication_success">美颜鉴权成功</string>
+    <string name="str_beauty_beauty_authentication_failed">美颜鉴权失败</string>
+    <string name="str_beauty_faceu_authentication_success">FaceU鉴权成功</string>
+    <string name="str_beauty_faceu_authentication_failed">FaceU鉴权失败</string>
+
+</resources>
