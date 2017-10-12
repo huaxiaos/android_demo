@@ -53,6 +53,43 @@
         <item name="android:singleLine">true</item>
     </style>
 
+    <style name="switch_bg_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/switch_bg_color_selector</item>
+    </style>
+
+    <style name="switch_text_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#333333</item>
+        <item name="android:layout_centerVertical">true</item>
+    </style>
+
+    <style name="switch_toggle_style">
+        <item name="android:textOn">""</item>
+        <item name="android:textOff">""</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+        <item name="android:thumbTextPadding">10dp</item>
+        <item name="android:switchMinWidth">25dp</item>
+        <item name="android:thumb">@drawable/switch_thumb</item>
+        <item name="android:track">@drawable/switch_track</item>
+    </style>
+
+    <style name="switch_line_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0.5dp</item>
+        <item name="android:background">#99eeeeee</item>
+    </style>
+
     <style name="switchStyle">
         <item name="android:textOn">""</item>
         <item name="android:textOff">""</item>

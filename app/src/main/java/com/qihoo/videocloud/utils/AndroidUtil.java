@@ -6,15 +6,19 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.net.NetworkInfo.State;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.telephony.TelephonyManager;
 import android.view.Display;
 import android.view.View;
@@ -35,6 +39,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.crypto.Mac;
@@ -622,6 +628,47 @@ public class AndroidUtil {
             return mac.doFinal(value.getBytes());
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static final SimpleDateFormat DATE_FORMAT_hhmmss = new SimpleDateFormat("HH:mm:ss");
+    private static final SimpleDateFormat DATE_FORMAT_mmss = new SimpleDateFormat("mm:ss");
+
+    public static String getTimeString(long timeInMillis) {
+        if (timeInMillis >= 3600000) {
+            return DATE_FORMAT_hhmmss.format(new Date(timeInMillis));
+        } else {
+            return DATE_FORMAT_mmss.format(new Date(timeInMillis));
+        }
+    }
+
+    public static void openFileBrowse(Activity activity, String title, String type, int requestCode) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(type);
+        try {
+            activity.startActivityForResult(Intent.createChooser(intent, title), requestCode);
+        } catch (android.content.ActivityNotFoundException ex) {
+            AndroidUtil.showToast(activity, "请安装文件管理器");
+        }
+    }
+
+    public static String uriToPath(Context context, Uri uri) {
+        try {
+            int index;
+            String path;
+            String[] projection = {
+                    MediaStore.Images.Media.DATA
+            };
+            Cursor cursor = context.getContentResolver().query(uri, projection, null, null, null);
+            index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            path = cursor.getString(index);
+            cursor.close();
+            return path;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

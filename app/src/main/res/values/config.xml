@@ -35,4 +35,7 @@
     <!--http://vod.cdn.huajiao.com/huikan_huajiao/vod-bucket-bj/_LC_ps3_non_3493580314867023631634335_SX.m3u8-->
     <string name="config_vod_url">http://static.s3.huajiao.com/Object.access/hj-video/NTg1NzY5ODgxNDgxNjM2MzM5OTUxMjcwNjg1MDUzNy5tcDQ=</string>
 
+    <!--上传-->
+    <string name="config_upload_bucket">videotest</string>
+
 </resources>

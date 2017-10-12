@@ -2,8 +2,16 @@
 package com.qihoo.videocloud;
 
 import android.app.Application;
+import android.graphics.Bitmap;
 import android.os.StrictMode;
 
+import com.nostra13.universalimageloader.cache.memory.impl.UsingFreqLimitedMemoryCache;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
+import com.nostra13.universalimageloader.core.download.BaseImageDownloader;
 import com.qihoo.livecloud.sdk.DebugUtils;
 import com.qihoo.livecloud.sdk.QHVCSdk;
 import com.qihoo.livecloud.sdk.QHVCSdkConfig;
@@ -13,6 +21,7 @@ import com.qihoo.livecloud.tools.Stats;
 import com.qihoo.livecloudrefactor.R;
 import com.qihoo.videocloud.beauty.BeautyHelper;
 import com.qihoo.videocloud.debug.Setting;
+import com.tencent.bugly.crashreport.CrashReport;
 
 import org.xutils.x;
 
@@ -33,7 +42,8 @@ public class VideoCloudApplication extends Application {
         useStrictMode();
         x.Ext.init(this);
         x.Ext.setDebug(true); // 是否输出debug日志, 开启debug会影响性能.
-        //        CrashReport.initCrashReport(getApplicationContext(), "3c9411c88e", true);
+        CrashReport.initCrashReport(getApplicationContext(), "3c9411c88e", true);
+        imageLoaderInit();
 
         QHVCSdkInit();
     }
@@ -50,7 +60,7 @@ public class VideoCloudApplication extends Application {
                 .setPlayerLogLevel(Constants.ELogLevel.LOG_LEVEL_DEBUG)
                 .setTransportLogLevel(Constants.ELogLevel.LOG_LEVEL_DEBUG);
 
-        // 播放器配置
+        // 直播云SDK配置
         QHVCSdkConfig.Builder builder = new QHVCSdkConfig.Builder(this)
                 .setBusinessId(getResources().getString(R.string.config_bid))
                 .setAppVersion("0.0")
@@ -97,6 +107,26 @@ public class VideoCloudApplication extends Application {
                     .penaltyLog()
                     .build());
         }
+    }
+
+    private void imageLoaderInit() {
+        DisplayImageOptions options = new DisplayImageOptions.Builder()
+                .cacheInMemory(true).cacheOnDisk(true)
+                .bitmapConfig(Bitmap.Config.RGB_565)
+                .imageScaleType(ImageScaleType.IN_SAMPLE_INT).build();
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
+                this)
+                        .threadPriority(Thread.NORM_PRIORITY - 1)
+                        .threadPoolSize(3)
+                        .memoryCacheSize(4 * 1024 * 1024)
+                        .memoryCache(new UsingFreqLimitedMemoryCache(4 * 1024 * 1024))
+                        .diskCacheSize(128 * 1024 * 1024)
+                        .diskCacheFileCount(100)
+                        .imageDownloader(new BaseImageDownloader(this, 30 * 1000, 30 * 1000))
+                        .defaultDisplayImageOptions(options) // default
+                        .writeDebugLogs()
+                        .tasksProcessingOrder(QueueProcessingType.FIFO).build();
+        ImageLoader.getInstance().init(config);
     }
 
     @Override

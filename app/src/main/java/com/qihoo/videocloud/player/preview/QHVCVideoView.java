@@ -245,6 +245,11 @@ public class QHVCVideoView extends RelativeLayout implements ILiveCloudDisplay {
         }
     }
 
+    public void setVideoRatio(float videoRatio){
+        if(playView != null && qhvcPlayer != null){
+            playView.setVideoRatio(qhvcPlayer.getRenderMode(), videoRatio);
+        }
+    }
     //---------------------------------------------------------------------------------------------
     public void setOnPreparedListener(IQHVCPlayer.OnPreparedListener onPreparedListener) {
         this.onPreparedListener = onPreparedListener;

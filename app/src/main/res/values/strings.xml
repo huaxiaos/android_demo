@@ -3,6 +3,9 @@
 
     <string name="str_sdk_ver"></string>
 
+    <!--common-->
+    <string name="str_common_setting">设置</string>
+
     <!--main Activity-->
     <string name="str_main_activity_subtitle">播放sdk</string>
     <string name="str_main_activity_btn_live">直播播放器</string>
@@ -42,5 +45,11 @@
     <string name="str_beauty_beauty_authentication_failed">美颜鉴权失败</string>
     <string name="str_beauty_faceu_authentication_success">FaceU鉴权成功</string>
     <string name="str_beauty_faceu_authentication_failed">FaceU鉴权失败</string>
+
+    <!-- upload -->
+    <string name="str_upload_ak">AK</string>
+    <string name="str_upload_sk">SK</string>
+    <string name="str_upload_bucket">Bucket 空间名称</string>
+    <string name="str_upload_file">File 上传文件路径</string>
 
 </resources>

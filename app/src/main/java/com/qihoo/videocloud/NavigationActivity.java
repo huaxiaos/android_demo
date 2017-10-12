@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.qihoo.livecloudrefactor.R;
 import com.qihoo.videocloud.debug.SettingActivity;
+import com.qihoo.videocloud.localserver.LocalServerActivity;
 import com.qihoo.videocloud.player.PlaySelectActivity;
 import com.qihoo.videocloud.recorder.PrepareRecordActivity;
 import com.qihoo.videocloud.upload.UploadActivity;
@@ -39,6 +40,7 @@ public class NavigationActivity extends Activity {
             R.drawable.icon_push_data,
             R.drawable.icon_play,
             R.drawable.icon_upload,
+            R.drawable.icon_localserver,
             //            R.drawable.icon_mic,
             //            R.drawable.icon_clip,
             //            R.drawable.icon_take_photo
@@ -47,6 +49,7 @@ public class NavigationActivity extends Activity {
             "推流",
             "播放",
             "上传",
+            "Local Server",
             //            "连麦",
             //            "裁剪",
             //            "拍摄"
@@ -55,6 +58,7 @@ public class NavigationActivity extends Activity {
             PrepareRecordActivity.class,
             /*TextureViewActivity.class*/PlaySelectActivity.class,
             UploadActivity.class,
+            LocalServerActivity.class,
             //            null,
             //            null,
             //            null

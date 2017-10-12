@@ -263,6 +263,9 @@ public class LiveVideoViewActivity extends Activity {
             public void onVideoSizeChanged(int handle, int width, int height) {
                 videoWidth = width;
                 videoHeight = height;
+                if (playView != null) {
+                    playView.setVideoRatio((float) width / (float) height);
+                }
             }
         });
         playView.setOnPlayerNetStatsListener(new IQHVCPlayerAdvanced.OnPlayerNetStatsListener() {

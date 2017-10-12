@@ -2,12 +2,19 @@
 package com.qihoo.videocloud.upload;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.qihoo.livecloud.sdk.QHVCSdk;
@@ -15,12 +22,13 @@ import com.qihoo.livecloud.tools.Logger;
 import com.qihoo.livecloud.tools.MD5;
 import com.qihoo.livecloud.tools.Stats;
 import com.qihoo.livecloud.tools.URLSafeBase64;
-import com.qihoo.livecloud.upload.LiveCloudUpload;
-import com.qihoo.livecloud.upload.LiveCloudUploadConfig;
-import com.qihoo.livecloud.upload.LiveCloudUploadEvent;
 import com.qihoo.livecloud.upload.OnUploadListener;
+import com.qihoo.livecloud.upload.QHVCUpload;
+import com.qihoo.livecloud.upload.QHVCUploadConfig;
+import com.qihoo.livecloud.upload.QHVCUploadEvent;
 import com.qihoo.livecloud.upload.utils.UploadError;
 import com.qihoo.livecloudrefactor.R;
+import com.qihoo.videocloud.utils.AndroidUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,82 +40,163 @@ public class UploadActivity extends Activity implements View.OnClickListener {
 
     private final static String TAG = "UploadActivity";
 
-    private final static String BUCKET = "videotest";
+    private final static int REQUEST_CODE_FILE_BROWSE = 1;
 
-    private EditText channelIdEditText;
-    private EditText urlEditText;
+    private EditText akEditText;
+    private EditText skEditText;
+    private EditText bidEditText;
+    private EditText cidEditText;
+    private EditText bucketEditText;
+    private EditText fileEditText;
 
-    private ProgressDialog mProgressDialog;
+    private CommonProgressDialog mProgressDialog;
 
-    private LiveCloudUploadEvent uploadEvent;
+    private QHVCUploadEvent uploadEvent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initData();
         initView();
+        initData();
     }
 
     private void initView() {
-        setContentView(R.layout.upload_activty_layout);
+        setContentView(R.layout.activty_upload);
 
         findViewById(R.id.upload_header_left_icon).setOnClickListener(this);
+        findViewById(R.id.upload_file_browse).setOnClickListener(this);
         findViewById(R.id.upload_start).setOnClickListener(this);
+        findViewById(R.id.upload_key_logger).setOnClickListener(this);
 
-        channelIdEditText = (EditText) findViewById(R.id.upload_channel_id);
-        urlEditText = (EditText) findViewById(R.id.upload_url);
+        akEditText = (EditText) findViewById(R.id.upload_ak);
+        skEditText = (EditText) findViewById(R.id.upload_sk);
+        bidEditText = (EditText) findViewById(R.id.upload_business_id);
+        cidEditText = (EditText) findViewById(R.id.upload_channel_id);
+        bucketEditText = (EditText) findViewById(R.id.upload_bucket);
+        fileEditText = (EditText) findViewById(R.id.upload_file);
     }
 
     private void initData() {
+        akEditText.setText(Stats.getak());
+        skEditText.setText(Stats.getsk());
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_FILE_BROWSE: {
+                if (resultCode == Activity.RESULT_OK) {
+                    doFileBrowseResult(data);
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.upload_header_left_icon:
+            case R.id.upload_header_left_icon: {
                 finish();
                 break;
-            case R.id.upload_start:/*开始上传*/
-                File file;
-                String s = urlEditText.getText().toString().trim();
-                if (!TextUtils.isEmpty(s)) {
-                    file = new File(s);
-                } else {
-                    return;
-                }
-
-                int parallelNum = LiveCloudUpload.getParallel(file.length());
-                //警告：token的计算应该由业务服务端生成，严禁将ak、sk放到客户端，此处放客户端仅用于演示
-                String token;
-                if (parallelNum == 0) { // 表单上传
-                    token = getFormToken(file);
-                } else { // 分片上传
-                    token = getBlockToken(file, parallelNum);
-                }
+            }
+            case R.id.upload_file_browse: {
+                AndroidUtil.openFileBrowse(this, "请选择一个要上传的文件", "*/*", REQUEST_CODE_FILE_BROWSE);
+                break;
+            }
+            case R.id.upload_start:/*开始上传*/ {
+                doUpload();
+                break;
+            }
+            case R.id.upload_key_logger: {
                 mProgressDialog = createdProgressDialog();
                 mProgressDialog.show();
-                uploadEvent = LiveCloudUpload.uploadFile(file, token, getUploadConfig(file), blockUploadListener);
+                uploadEvent = QHVCUpload.uploadLog(getUploadConfig(null), blockUploadListener);
+                break;
+            }
+            default:
                 break;
         }
+    }
+
+    private void doFileBrowseResult(Intent data) {
+        String file = AndroidUtil.uriToPath(this, data.getData());
+        if (!TextUtils.isEmpty(file)) {
+            fileEditText.setText(file);
+        }
+    }
+
+    private void doUpload() {
+        String ak = akEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(ak)) {
+            AndroidUtil.showToast(this, "AK 不能为空");
+            return;
+        }
+
+        String sk = skEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(sk)) {
+            AndroidUtil.showToast(this, "SK 不能为空");
+            return;
+        }
+
+        String bid = bidEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(bid)) {
+            AndroidUtil.showToast(this, "Bid 不能为空");
+            return;
+        }
+
+        String cid = cidEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(cid)) {
+            AndroidUtil.showToast(this, "Cid 不能为空");
+            return;
+        }
+
+        String bucket = bucketEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(bucket)) {
+            AndroidUtil.showToast(this, "Bucket 不能为空");
+            return;
+        }
+
+        String filename = fileEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(filename)) {
+            AndroidUtil.showToast(this, "File 不能为空");
+            return;
+        }
+
+        File file = new File(filename);
+        int parallelNum = QHVCUpload.getParallel(file.length());
+        //警告：token的计算应该由业务服务端生成，严禁将ak、sk放到客户端，此处放客户端仅用于演示
+        String token;
+        if (parallelNum == 0) { // 表单上传
+            token = getFormToken(file, ak, sk, bucket);
+        } else { // 分片上传
+            token = getBlockToken(file, parallelNum, ak, sk, bucket);
+        }
+        mProgressDialog = createdProgressDialog();
+        mProgressDialog.show();
+        uploadEvent = QHVCUpload.uploadFile(file, token, getUploadConfig(file), blockUploadListener);
     }
 
     /**
      * 警告：token的计算应该由业务服务端生成，严禁将ak、sk放到客户端，此处放客户端仅用于演示
      */
-    private String getFormToken(File file) {
-        String strategyJson = formToken(file.getName());
-        Logger.e(TAG, strategyJson);
+    private String getFormToken(File file, String ak, String sk, String bucket) {
+        String strategyJson = formToken(file.getName(), bucket);
+        Logger.d(TAG, strategyJson);
         String safeEncode = URLSafeBase64.encodeToString(strategyJson);
-        Logger.e(TAG, safeEncode);
-        String sign = MD5.encryptMD5(safeEncode + Stats.getsk());
-        return Stats.getak() + ":" + sign + ":" + safeEncode;
+        Logger.d(TAG, safeEncode);
+        String sign = MD5.encryptMD5(safeEncode + sk);
+        return ak + ":" + sign + ":" + safeEncode;
     }
 
-    private String formToken(String fileName) {
+    private String formToken(String fileName, String bucket) {
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("bucket", BUCKET);
+            jsonObject.put("bucket", bucket);
             jsonObject.put("object", fileName);
             jsonObject.put("deadline", System.currentTimeMillis() + 3600 * 1000);
             jsonObject.put("insertOnly", 0);
@@ -121,19 +210,19 @@ public class UploadActivity extends Activity implements View.OnClickListener {
     /**
      * 警告：token的计算应该由业务服务端生成，严禁将ak、sk放到客户端，此处放客户端仅用于演示
      */
-    private String getBlockToken(File file, int parallelNum) {
-        String strategyJson = toGetTokenJson(file, parallelNum);
+    private String getBlockToken(File file, int parallelNum, String ak, String sk, String bucket) {
+        String strategyJson = toGetTokenJson(file, parallelNum, bucket);
         Logger.d(TAG, strategyJson);
         String safeEncode = URLSafeBase64.encodeToString(strategyJson);
         Logger.d(TAG, safeEncode);
-        String sign = MD5.encryptMD5(safeEncode + Stats.getsk());
-        return Stats.getak() + ":" + sign + ":" + safeEncode;
+        String sign = MD5.encryptMD5(safeEncode + sk);
+        return ak + ":" + sign + ":" + safeEncode;
     }
 
-    private String toGetTokenJson(File file, int parallelNum) {
+    private String toGetTokenJson(File file, int parallelNum, String bucket) {
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.putOpt("bucket", BUCKET)
+            jsonObject.putOpt("bucket", bucket)
                     .putOpt("object", file.getName())
                     .putOpt("fsize", file.length())
                     .putOpt("parallel", parallelNum)
@@ -150,9 +239,9 @@ public class UploadActivity extends Activity implements View.OnClickListener {
         public void onSuccess(String result) {
             if (mProgressDialog != null) {
                 mProgressDialog.dismiss();
-                showToast("上传成功！");
+                showToast(0, null);
             }
-            Logger.e(TAG, "ian, onSuccess, result: " + result);
+            Logger.d(TAG, "ian, onSuccess, result: " + result);
         }
 
         @Override
@@ -161,7 +250,7 @@ public class UploadActivity extends Activity implements View.OnClickListener {
                 int ps = (int) (progress * 100 / total);
                 mProgressDialog.setProgress(ps);
             }
-            Logger.e(TAG, "ian, total=" + total + " progress=" + progress);
+            Logger.d(TAG, "ian, total=" + total + " progress=" + progress);
         }
 
         @Override
@@ -173,16 +262,19 @@ public class UploadActivity extends Activity implements View.OnClickListener {
         public void onFailed(UploadError uploadError) {
             if (mProgressDialog != null) {
                 mProgressDialog.dismiss();
-                showToast("上传失败！");
+                showToast(uploadError.getErrCode(), uploadError.getErrMsg());
             }
             Logger.e(TAG, "ian, " + uploadError.toString());
         }
     };
 
-    private LiveCloudUploadConfig getUploadConfig(File file) {
-        LiveCloudUploadConfig config = new LiveCloudUploadConfig();
+    private QHVCUploadConfig getUploadConfig(File file) {
+        QHVCUploadConfig config = new QHVCUploadConfig();
 
-        String cid = channelIdEditText.getText().toString();
+        String bid = bidEditText.getText().toString().trim();
+        QHVCSdk.getInstance().getConfig().setBusinessId(bid);
+
+        String cid = cidEditText.getText().toString().trim();
         config.setCid(cid);
 
         String uid = QHVCSdk.getInstance().getConfig().getUserId();
@@ -206,31 +298,19 @@ public class UploadActivity extends Activity implements View.OnClickListener {
         return config;
     }
 
-    private ProgressDialog createdProgressDialog() {
-        ProgressDialog dialog = new ProgressDialog(this);
-        //设置进度条风格，风格为圆形，旋转的
-        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        //设置ProgressDialog 标题
-        dialog.setTitle("上传文件");
-        //设置ProgressDialog 提示信息
-        dialog.setMessage("文件上传中");
-        //设置ProgressDialog 标题图标
-        dialog.setIcon(android.R.drawable.ic_dialog_alert);
-        //设置ProgressDialog的最大进度
+    private CommonProgressDialog createdProgressDialog() {
+        CommonProgressDialog dialog = new CommonProgressDialog(this);
+        dialog.setMessage("上传文件");
         dialog.setMax(100);
-        //设置ProgressDialog 的一个Button
-        dialog.setButton("取消上传", new ProgressDialog.OnClickListener() {
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
+            public void onCancel(DialogInterface dialog) {
                 cancelUpload();
                 dialog.dismiss();
             }
         });
-        //设置ProgressDialog 是否可以按退回按键取消
         dialog.setCancelable(false);
-        //设置ProgressDialog的当前进度
         dialog.setProgress(1);
-
         return dialog;
     }
 
@@ -243,11 +323,35 @@ public class UploadActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    private void showToast(final String content) {
+    private void showToast(final int errCode, final String errMsg) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(UploadActivity.this, content, Toast.LENGTH_LONG).show();
+                View v = View.inflate(UploadActivity.this, R.layout.toast_upload, null);
+                ImageView imageView = (ImageView) v.findViewById(R.id.iv_image);
+                TextView textView = (TextView) v.findViewById(R.id.tv_text);
+                if (errCode == 0) {
+                    imageView.setImageDrawable(getResources().getDrawable(R.drawable.upload_toast_success));
+                    textView.setText("上传完成");
+                } else {
+                    imageView.setImageDrawable(getResources().getDrawable(R.drawable.upload_toast_failed));
+                    textView.setText("上传失败(" + errCode + " " + errMsg + ")");
+                }
+                Toast mToast = new Toast(UploadActivity.this);
+
+                WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+                DisplayMetrics outMetrics = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(outMetrics);
+
+                RelativeLayout.LayoutParams vlp = new RelativeLayout.LayoutParams(outMetrics.widthPixels,
+                        outMetrics.heightPixels);
+                vlp.setMargins(0, 0, 0, 0);
+                v.setLayoutParams(vlp);
+
+                mToast.setDuration(Toast.LENGTH_SHORT);
+                mToast.setView(v);
+                mToast.setGravity(Gravity.FILL, 0, 0);
+                mToast.show();
             }
         });
     }

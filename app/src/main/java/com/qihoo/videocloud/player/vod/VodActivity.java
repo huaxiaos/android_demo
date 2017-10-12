@@ -1,10 +1,6 @@
 
 package com.qihoo.videocloud.player.vod;
 
-import static com.qihoo.videocloud.player.PlayConstant.SHOW_MODEL_LAND;
-import static com.qihoo.videocloud.player.PlayConstant.SHOW_MODEL_PORT;
-import static com.qihoo.videocloud.player.PlayConstant.SHOW_MODEL_PORT_SMALL;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -39,16 +35,19 @@ import com.qihoo.videocloud.QHVCPlayer;
 import com.qihoo.videocloud.QHVCPlayerPlugin;
 import com.qihoo.videocloud.player.LogAdapter;
 import com.qihoo.videocloud.player.PlayConstant;
+import com.qihoo.videocloud.utils.AndroidUtil;
 import com.qihoo.videocloud.utils.NoDoubleClickListener;
 import com.qihoo.videocloud.widget.ViewHeader;
 
 import java.lang.ref.WeakReference;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.qihoo.videocloud.player.PlayConstant.SHOW_MODEL_LAND;
+import static com.qihoo.videocloud.player.PlayConstant.SHOW_MODEL_PORT;
+import static com.qihoo.videocloud.player.PlayConstant.SHOW_MODEL_PORT_SMALL;
 
 public class VodActivity extends Activity {
 
@@ -189,7 +188,7 @@ public class VodActivity extends Activity {
 
                 if (qhvcPlayer != null) {
 
-                    qhvcPlayer.seekTo((qhvcPlayer.getDuration() * currentProgress) / 100);
+                    qhvcPlayer.seekTo((qhvcPlayer.getDuration() * currentProgress) / 100, true);
                 }
             }
         });
@@ -341,7 +340,7 @@ public class VodActivity extends Activity {
 
             @Override
             public void onBufferingStop(int handle) {
-                Log.w(TAG, "buffering event. stop");
+                Log.w(TAG, "buffering event. stop " + ((qhvcPlayer != null) ? qhvcPlayer.getCurrentPosition() : 0));
 
             }
         });
@@ -384,8 +383,8 @@ public class VodActivity extends Activity {
                     sbProgress.setProgress(0);
                 }
 
-                tvPlayTime.setText(getTimeString(progress));
-                tvDuration.setText(getTimeString(total));
+                tvPlayTime.setText(AndroidUtil.getTimeString(progress));
+                tvDuration.setText(AndroidUtil.getTimeString(total));
 
                 showLog();
             }
@@ -517,17 +516,6 @@ public class VodActivity extends Activity {
             //                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN;
             int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
             decorView.setSystemUiVisibility(uiOptions);
-        }
-    }
-
-    public static final SimpleDateFormat DATE_FORMAT_hhmmss = new SimpleDateFormat("HH:mm:ss");
-    public static final SimpleDateFormat DATE_FORMAT_mmss = new SimpleDateFormat("mm:ss");
-
-    public static String getTimeString(long timeInMillis) {
-        if (timeInMillis >= 3600000) {
-            return DATE_FORMAT_hhmmss.format(new Date(timeInMillis));
-        } else {
-            return DATE_FORMAT_mmss.format(new Date(timeInMillis));
         }
     }
 

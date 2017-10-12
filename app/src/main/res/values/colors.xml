@@ -22,4 +22,6 @@
     <color name="common_text_blue">#38B1C0</color>
     <color name="common_red">#ff7640</color>
 
+    <color name="switch_bg_normal">#ffffff</color>
+    <color name="switch_bg_press">#14000000</color>
 </resources>
